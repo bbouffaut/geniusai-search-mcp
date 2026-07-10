@@ -99,7 +99,10 @@ def search_photos(
 
 def main() -> None:
     _ensure_geniusai_server_available()
-    mcp.run(transport="http", host=MCP_SERVER_HOST, port=MCP_SERVER_PORT)
+    try:
+        mcp.run(transport="http", host=MCP_SERVER_HOST, port=MCP_SERVER_PORT)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":

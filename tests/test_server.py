@@ -125,3 +125,14 @@ def test_main_never_starts_http_server_when_geniusai_server_is_down(monkeypatch)
         server.main()
 
     assert run_calls == []
+
+
+def test_main_exits_quietly_on_keyboard_interrupt(monkeypatch):
+    monkeypatch.setattr(server, "_ping", lambda *a, **k: None)
+
+    def fake_run(**kwargs):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(server.mcp, "run", fake_run)
+
+    server.main()  # must not raise

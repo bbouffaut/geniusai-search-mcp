@@ -1,0 +1,17 @@
+[project]
+name = "geniusai-search-mcp"
+version = "0.1.0"
+description = "MCP server exposing geniusai-server's photo Search API as an MCP tool."
+requires-python = ">=3.12"
+dependencies = [
+  "fastmcp",
+  "requests",
+]
+
+[tool.uv]
+python-preference = "only-system"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

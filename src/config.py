@@ -6,3 +6,8 @@ GENIUSAI_SEARCH_TIMEOUT_SECONDS = float(os.environ.get("GENIUSAI_SEARCH_TIMEOUT_
 GENIUSAI_PING_TIMEOUT_SECONDS = float(os.environ.get("GENIUSAI_PING_TIMEOUT_SECONDS", "3"))
 GENIUSAI_STARTUP_PING_RETRIES = int(os.environ.get("GENIUSAI_STARTUP_PING_RETRIES", "3"))
 GENIUSAI_STARTUP_PING_INTERVAL_SECONDS = float(os.environ.get("GENIUSAI_STARTUP_PING_INTERVAL_SECONDS", "1"))
+
+# This server runs standalone over HTTP (not launched per-session by an MCP
+# client via stdio) — clients connect to http://<host>:<port>/mcp.
+MCP_SERVER_HOST = os.environ.get("MCP_SERVER_HOST", "127.0.0.1")
+MCP_SERVER_PORT = int(os.environ.get("MCP_SERVER_PORT", "8000"))

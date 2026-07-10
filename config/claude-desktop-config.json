@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "geniusai-search": {
+      "command": "/opt/homebrew/bin/uv",
+      "args": [
+        "--directory",
+        "/Users/baptiste/workspace/geniusai-search-mcp",
+        "run",
+        "python",
+        "src/server.py"
+      ],
+      "env": {
+        "GENIUSAI_SERVER_URL": "http://10.20.0.252:19819"
+        }
+    }
+  }
+}

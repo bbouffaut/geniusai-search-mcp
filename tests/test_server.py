@@ -95,3 +95,33 @@ def test_ensure_geniusai_server_available_exits_after_exhausting_retries(monkeyp
     captured = capsys.readouterr()
     assert "not reachable" in captured.err
     assert "Could not reach geniusai-server" in captured.err
+
+
+def test_main_serves_http_when_geniusai_server_is_up(monkeypatch):
+    monkeypatch.setattr(server, "_ping", lambda *a, **k: None)
+
+    run_calls = []
+    monkeypatch.setattr(server.mcp, "run", lambda **kwargs: run_calls.append(kwargs))
+
+    server.main()
+
+    assert run_calls == [
+        {"transport": "http", "host": server.MCP_SERVER_HOST, "port": server.MCP_SERVER_PORT}
+    ]
+
+
+def test_main_never_starts_http_server_when_geniusai_server_is_down(monkeypatch):
+    monkeypatch.setattr(server, "GENIUSAI_STARTUP_PING_RETRIES", 1)
+
+    def fake_ping(*args, **kwargs):
+        raise geniusai_client.GeniusAISearchError("down")
+
+    monkeypatch.setattr(server, "_ping", fake_ping)
+
+    run_calls = []
+    monkeypatch.setattr(server.mcp, "run", lambda **kwargs: run_calls.append(kwargs))
+
+    with pytest.raises(SystemExit):
+        server.main()
+
+    assert run_calls == []

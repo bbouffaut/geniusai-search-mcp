@@ -1,5 +1,5 @@
 RUN_SCRIPT := ./run.sh
-DOTENV_LOCAL ?= .env.local
+DOTENV_LOCAL ?= ./config/.env.local
 
 .PHONY: dev dev-local
 

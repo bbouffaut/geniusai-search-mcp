@@ -9,6 +9,8 @@ from config import (
     GENIUSAI_SERVER_URL,
     GENIUSAI_STARTUP_PING_INTERVAL_SECONDS,
     GENIUSAI_STARTUP_PING_RETRIES,
+    MCP_SERVER_HOST,
+    MCP_SERVER_PORT,
 )
 from geniusai_client import GeniusAISearchError
 from geniusai_client import ping as _ping
@@ -97,7 +99,7 @@ def search_photos(
 
 def main() -> None:
     _ensure_geniusai_server_available()
-    mcp.run()
+    mcp.run(transport="http", host=MCP_SERVER_HOST, port=MCP_SERVER_PORT)
 
 
 if __name__ == "__main__":

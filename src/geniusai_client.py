@@ -2,7 +2,7 @@ from typing import Any
 
 import requests
 
-from config import GENIUSAI_SEARCH_TIMEOUT_SECONDS, GENIUSAI_SERVER_URL
+from config import GENIUSAI_PING_TIMEOUT_SECONDS, GENIUSAI_SEARCH_TIMEOUT_SECONDS, GENIUSAI_SERVER_URL
 
 
 class GeniusAISearchError(Exception):
@@ -21,6 +21,28 @@ def _extract_error_message(response: requests.Response) -> str:
     if isinstance(body, dict) and "error" in body:
         return str(body["error"])
     return response.text or f"HTTP {response.status_code}"
+
+
+def ping(
+    base_url: str = GENIUSAI_SERVER_URL,
+    timeout: float = GENIUSAI_PING_TIMEOUT_SECONDS,
+) -> None:
+    """Check that geniusai-server is up by calling its GET /ping endpoint.
+
+    /ping is a pure in-process route (no auth, no database, no external calls),
+    making it the cheapest possible liveness check. Raises GeniusAISearchError
+    if the server is unreachable or doesn't respond as expected.
+    """
+    try:
+        response = requests.get(f"{base_url}/ping", timeout=timeout)
+    except requests.RequestException as exc:
+        raise GeniusAISearchError(f"Could not reach geniusai-server at {base_url}: {exc}") from exc
+
+    if response.status_code != 200 or response.text.strip() != "pong":
+        raise GeniusAISearchError(
+            f"geniusai-server at {base_url} did not respond as expected to /ping "
+            f"(status={response.status_code}, body={response.text!r})"
+        )
 
 
 def search_photos(

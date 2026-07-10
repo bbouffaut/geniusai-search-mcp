@@ -43,3 +43,55 @@ def test_search_photos_tool_surfaces_server_error(monkeypatch):
 
     exc_info = _run(scenario())
     assert "Provide a search term" in str(exc_info.value)
+
+
+def test_ensure_geniusai_server_available_succeeds_on_first_ping(monkeypatch):
+    calls = {"count": 0}
+
+    def fake_ping(*args, **kwargs):
+        calls["count"] += 1
+
+    monkeypatch.setattr(server, "_ping", fake_ping)
+
+    server._ensure_geniusai_server_available()
+
+    assert calls["count"] == 1
+
+
+def test_ensure_geniusai_server_available_retries_then_succeeds(monkeypatch):
+    monkeypatch.setattr(server, "GENIUSAI_STARTUP_PING_RETRIES", 3)
+    monkeypatch.setattr(server, "GENIUSAI_STARTUP_PING_INTERVAL_SECONDS", 0)
+    sleeps = []
+    monkeypatch.setattr(server.time, "sleep", lambda s: sleeps.append(s))
+
+    calls = {"count": 0}
+
+    def fake_ping(*args, **kwargs):
+        calls["count"] += 1
+        if calls["count"] < 3:
+            raise geniusai_client.GeniusAISearchError("not up yet")
+
+    monkeypatch.setattr(server, "_ping", fake_ping)
+
+    server._ensure_geniusai_server_available()
+
+    assert calls["count"] == 3
+    assert len(sleeps) == 2
+
+
+def test_ensure_geniusai_server_available_exits_after_exhausting_retries(monkeypatch, capsys):
+    monkeypatch.setattr(server, "GENIUSAI_STARTUP_PING_RETRIES", 2)
+    monkeypatch.setattr(server, "GENIUSAI_STARTUP_PING_INTERVAL_SECONDS", 0)
+
+    def fake_ping(*args, **kwargs):
+        raise geniusai_client.GeniusAISearchError("Could not reach geniusai-server")
+
+    monkeypatch.setattr(server, "_ping", fake_ping)
+
+    with pytest.raises(SystemExit) as exc_info:
+        server._ensure_geniusai_server_available()
+
+    assert exc_info.value.code == 1
+    captured = capsys.readouterr()
+    assert "not reachable" in captured.err
+    assert "Could not reach geniusai-server" in captured.err

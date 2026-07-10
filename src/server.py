@@ -1,12 +1,51 @@
+import sys
+import time
 from typing import Any
 
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 
+from config import (
+    GENIUSAI_SERVER_URL,
+    GENIUSAI_STARTUP_PING_INTERVAL_SECONDS,
+    GENIUSAI_STARTUP_PING_RETRIES,
+)
 from geniusai_client import GeniusAISearchError
+from geniusai_client import ping as _ping
 from geniusai_client import search_photos as _search_photos
 
 mcp = FastMCP("geniusai-search")
+
+
+def _ensure_geniusai_server_available() -> None:
+    """Poll geniusai-server's /ping endpoint before starting; exit if it's not up.
+
+    The MCP server is useless without geniusai-server, so this fails fast at
+    startup with a clear message instead of only failing on the first search.
+    """
+    attempts = max(1, GENIUSAI_STARTUP_PING_RETRIES)
+    last_error: GeniusAISearchError | None = None
+
+    for attempt in range(1, attempts + 1):
+        try:
+            _ping()
+            return
+        except GeniusAISearchError as exc:
+            last_error = exc
+            if attempt < attempts:
+                time.sleep(GENIUSAI_STARTUP_PING_INTERVAL_SECONDS)
+
+    print(
+        f"error: geniusai-server is not reachable at {GENIUSAI_SERVER_URL} "
+        f"after {attempts} attempt(s): {last_error}",
+        file=sys.stderr,
+    )
+    print(
+        "Start geniusai-server first, or set GENIUSAI_SERVER_URL to point at "
+        "the correct host/port.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 
 @mcp.tool
@@ -57,6 +96,7 @@ def search_photos(
 
 
 def main() -> None:
+    _ensure_geniusai_server_available()
     mcp.run()
 
 

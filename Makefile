@@ -1,10 +1,11 @@
 RUN_SCRIPT := ./run.sh
 DOTENV_LOCAL ?= ./config/.env.local
+DOTENV_PROD ?= ./config/.env.local
 
 .PHONY: dev dev-local
 
 dev:
-	$(RUN_SCRIPT)
+	$(RUN_SCRIPT) --dotenv $(DOTENV_PROD)
 
 ## Run the MCP server with environment variables loaded from DOTENV_LOCAL
 ## (e.g. GENIUSAI_SERVER_URL to point at a non-default geniusai-server instance).
